@@ -18,4 +18,4 @@ use Illuminate\Support\Facades\Route;
 //    return view('welcome');
 //});
 
-Route::get('/', [PaymentController::class, 'asd']);
+Route::get('/', [PaymentController::class, 'pay']);

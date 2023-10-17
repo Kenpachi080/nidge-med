@@ -2,29 +2,50 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\PayRequest;
+use App\Models\Payment;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class PaymentController extends Controller
 {
 
-    public function pay()
+    public function pay(PayRequest $request)
     {
+        $data  = $request->validated();
+
+        $payment = Payment::create($data);
         $defaultSettings = [
-            'pg_order_id' => '123456',
+            'pg_order_id' => (string)$payment->id,
             'pg_merchant_id' => '544905',
-            'pg_amount' => '100',
+            'pg_amount' => (string)$payment->amount,
             'pg_description' => 'Test payment 7',
             'pg_testing_mode' => '1',
             'pg_salt' => 'evrika',
+            'pg_result_url' => route('pay.callback'),
+            'pg_request_method' => 'POST',
+            'pg_success_url' => route('pay.callback'),
+            'pg_failure_url' => route('pay.callback'),
+            'pg_success_url_method' => 'POST',
+            'pg_failure_url_method' => 'POST'
         ];
 
-        $defaultSettings['pg_sig'] = $this->signature($defaultSettings);
-        $response = Http::post('https://api.freedompay.money/init_payment.php', $defaultSettings);
 
-        return $response->body();
+        $defaultSettings['pg_sig'] = $this->signature($defaultSettings);
+
+        $response = Http::withOptions([
+            'verify' => false
+        ])->post('https://api.freedompay.money/init_payment.php', $defaultSettings);
+
+        $xml = new \SimpleXMLElement($response->body());
+        return response([
+            'status' => $xml->pg_status,
+            'pg_redirect_url' => $xml->pg_redirect_url,
+        ]);
     }
 
-    public function signature($request): string
+    private function signature($request): string
     {
         $requestForSignature = $this->makeFlatParamsArray($request);
 
@@ -50,5 +71,10 @@ class PaymentController extends Controller
         }
 
         return $arrFlatParams;
+    }
+
+    public function callback(Request $request): void
+    {
+        Log::info("request", ['data' => $request]);
     }
 }
