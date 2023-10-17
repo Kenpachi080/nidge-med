@@ -23,3 +23,5 @@ Route::get('/', function () {
 
 Route::get('pay', [PaymentController::class, 'pay']);
 Route::post('pay/callback', [PaymentController::class, 'callback'])->name('pay.callback');
+Route::post('pay/callback', [PaymentController::class, 'success'])->name('pay.success');
+Route::post('pay/callback', [PaymentController::class, 'failure'])->name('pay.failure');

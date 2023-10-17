@@ -75,6 +75,16 @@ class PaymentController extends Controller
 
     public function callback(Request $request): void
     {
-        Log::info("request", ['data' => $request]);
+        Log::info("callback", ['data' => $request]);
+    }
+
+    public function success(Request $request): void
+    {
+        Log::info("success", ['data' => $request]);
+    }
+
+    public function failure(Request $request): void
+    {
+        Log::info("failure", ['data' => $request]);
     }
 }
